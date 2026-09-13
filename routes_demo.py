@@ -1,15 +1,25 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+
+from pydantic import BaseModel,Field
+
 
 app= FastAPI()
 
+class TaskOut(BaseModel):
+    id:int
+    name:str = Field(max_length=50,min_length=1)
+    gender: str=Field(description="性别")
+    age: int=Field(ge=0,le=150)
+
+
+
 class Tasks(BaseModel):
-    id: int=11
-    gender: str
-    age: int
+    name:str = Field(max_length=50,min_length=1)
+    gender: str=Field(description="性别")
+    age: int=Field(ge=0,le=150)
 
 class Tasks_Patch(BaseModel):
-    id: int|None= None
+    name:str|None=None
     gender: str|None=None
     age: int|None= None
 
@@ -23,16 +33,20 @@ tasks=[
     {
         "id":2,
         "name":"liusihan",
+        "gender":"male",
         "age":18
     }
 ]
 
 
+
+
 #查询参数
-@app.get("/tasks")
+
+@app.get("/tasks",response_model=list[TaskOut])
 async def list_tasks(keywords:str=""):
     if not keywords:
-        return {"task":tasks}
+        return tasks
     else:
         result=[]
         for task in tasks:
@@ -42,7 +56,8 @@ async def list_tasks(keywords:str=""):
 
 
 #路径参数
-@app.get("/tasks/{id}")
+
+@app.get("/tasks/{id}",response_model=TaskOut)
 async def get_task(id:int):
     for task in tasks:
         if task["id"] == id:
@@ -51,24 +66,33 @@ async def get_task(id:int):
     return{"message": "error"}
 
 
-@app.post("/tasks")
+@app.post("/tasks",response_model=TaskOut)
 async def create_task(task:Tasks):
-    if not task:
-        return {"message": "error"}
-    tasks.append(task.model_dump())
-    return tasks
+    new_task ={}
+    #先找最大值id，推荐列表推导式
+    max_id=max([item["id"] for item in tasks], default=0)
+    id=max_id+1
+
+    #添加任务
+    new_task["id"]=id
+    new_task["name"]=task.name
+    new_task["gender"]=task.gender
+    new_task["age"]=task.age
+
+    #添加到任务列表中
+    tasks.append(new_task)
+
+    return TaskOut(**new_task)
 
 
-
-
-@app.put("/tasks/{id}")
+@app.put("/tasks/{id}",response_model=TaskOut)
 async def update_task(id:int,task:Tasks):
     for item in tasks:
         if item["id"] == id:
             item["gender"] = task.gender
             item["age"]=task.age
-            return {"message": "World",
-                    'tasks':tasks}
+            item["name"]=task.name
+            return TaskOut(**item)
     return{"message": "没找到"}
 
 
@@ -80,7 +104,9 @@ async def patch_task(id:int,task:Tasks_Patch):
                 item["gender"]=task.gender
             if task.age is not None:
                 item["age"]=task.age
-            return{"tasks":tasks}
+            if task.name is not None:
+                item["name"]=task.name
+            return TaskOut(**item)
     return {"message": "error"}
 
 
