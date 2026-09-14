@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
 
 from pydantic import BaseModel,Field
 
@@ -63,10 +63,10 @@ async def get_task(id:int):
         if task["id"] == id:
             return task
 
-    return{"message": "error"}
+    raise HTTPException(status_code=404,detail="查询不到次id")
 
 
-@app.post("/tasks",response_model=TaskOut)
+@app.post("/tasks",response_model=TaskOut,status_code=201)
 async def create_task(task:Tasks):
     new_task ={}
     #先找最大值id，推荐列表推导式
@@ -93,10 +93,10 @@ async def update_task(id:int,task:Tasks):
             item["age"]=task.age
             item["name"]=task.name
             return TaskOut(**item)
-    return{"message": "没找到"}
+    raise HTTPException(status_code=404,detail="无此id")
 
 
-@app.patch("/tasks/{id}")
+@app.patch("/tasks/{id}",response_model=TaskOut)
 async def patch_task(id:int,task:Tasks_Patch):
     for item in tasks:
         if item["id"] == id:
@@ -107,14 +107,15 @@ async def patch_task(id:int,task:Tasks_Patch):
             if task.name is not None:
                 item["name"]=task.name
             return TaskOut(**item)
-    return {"message": "error"}
+    raise HTTPException(status_code=404,detail="无此id")
+
 
 
 #用remove删除
-@app.delete("/tasks/{id}")
+@app.delete("/tasks/{id}",status_code=204)
 async def delete_task(id:int):
     for item in tasks:
         if item["id"] == id:
             tasks.remove(item)
-            return {"tasks":tasks}
-    return {"message": "没有找到"}
+            return
+    raise HTTPException(status_code=404,detail="无此id")
