@@ -13,26 +13,22 @@ class Publisher(BaseModel):
 
 
 
-
-class Book(BaseModel):
+class BookBase(BaseModel):
     author: str=Field(max_length=50,min_length=1)
     title: str=Field(max_length=50,min_length=1)
     price: int=Field(ge=1,le=100)
     publisher:Publisher
     tags:list[str]=[]
-    first_published:int=Field(ge=1000,le=2100)
-    reprint_year:int|None=None
-
-    #单字段
 
     @field_validator('title')
     @classmethod
     def validate_title(cls, value:str)->str:
+        if value is None:
+            return None
         value=value.strip()
         if not value:
             raise ValueError("书名不能只有空格")
         return value
-
 
     @field_validator("tags")
     @classmethod
@@ -43,6 +39,13 @@ class Book(BaseModel):
                 if item not in result:
                     result.append(item)
         return result
+
+
+
+class Book(BookBase):
+
+    first_published:int=Field(ge=1000,le=2100)
+    reprint_year:int|None=None
 
 
     #跨字段验证
@@ -57,26 +60,29 @@ class Book(BaseModel):
 
 
 
-class Book_patch(BaseModel):
+class BookPatch(BookBase):
 
     author: str|None=None
     title: str|None=None
-    price: int|None=None
+    price: int|None=Field(default=None,ge=1,le=100)
     publisher:Publisher|None=Field(default=None,description="若提供请整体替换，否则剩下的字段会被清空")
 
     tags:list[str]| None=None
-    first_published: int|None=None
+    first_published: int|None=Field(default=None,ge=1000,le=2100)
     reprint_year: int|None=None
+
+    #从写一下跨字段验证
+    @model_validator(mode="after")
+    def check_years(self):
+        if (self.reprint_year is not None and self.first_published is not None) and self.reprint_year<self.first_published:
+            raise ValueError("再版年份不能早于出版年份")
+        return self
+
 
 
 #设置一下输出包裹
-class BookOut(BaseModel):
+class BookOut(BookBase):
     id :int
-    author: str
-    title: str
-    price: int
-    publisher:Publisher
-    tags:list[str]=[]
     first_published: int
     reprint_year: int|None=None
 
@@ -145,7 +151,7 @@ async def update_book(id:int,book:Book):
 
 
 @app.patch('/books/{id}',tags=["books"],response_model=BookOut)
-async def patch_book(id:int,book:Book_patch):
+async def patch_book(id:int,book:BookPatch):
     for item in library_list:
         if item["id"]==id:
             if book.author is not None:
