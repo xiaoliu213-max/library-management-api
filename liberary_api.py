@@ -1,5 +1,5 @@
 from fastapi import HTTPException,FastAPI
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator,ConfigDict
 
 
 app=FastAPI()
@@ -7,6 +7,7 @@ app=FastAPI()
 
 #定义模型
 class Publisher(BaseModel):
+    model_config = ConfigDict(extra="forbid",str_strip_whitespace=True )
 
     name:str=Field(max_length=30,min_length=1)
     city:str|None=Field(default=None,max_length=30,min_length=1)
@@ -14,21 +15,18 @@ class Publisher(BaseModel):
 
 
 class BookBase(BaseModel):
+    #模型约束
+    model_config = ConfigDict(extra="forbid",#多传字段直接422
+                              str_strip_whitespace=True #所有字符串自动去除收尾空格
+                              )
+
     author: str=Field(max_length=50,min_length=1)
     title: str=Field(max_length=50,min_length=1)
     price: int=Field(ge=1,le=100)
     publisher:Publisher
     tags:list[str]=[]
 
-    @field_validator('title')
-    @classmethod
-    def validate_title(cls, value:str)->str:
-        if value is None:
-            return None
-        value=value.strip()
-        if not value:
-            raise ValueError("书名不能只有空格")
-        return value
+
 
     @field_validator("tags")
     @classmethod
