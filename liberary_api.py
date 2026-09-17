@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import HTTPException,FastAPI
 from pydantic import BaseModel, Field, field_validator, model_validator,ConfigDict
 
@@ -6,6 +8,7 @@ app=FastAPI()
 
 
 #定义模型
+
 class Publisher(BaseModel):
     model_config = ConfigDict(extra="forbid",str_strip_whitespace=True )
 
@@ -38,13 +41,25 @@ class BookBase(BaseModel):
                     result.append(item)
         return result
 
+#客户端输入模型
+class BorrowRecordIn(BaseModel
+                   ):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    borrower: str = Field(max_length=30, min_length=1)  # 借阅人
+
+
+    returned: bool = False  # 是否已经归还
+
+#服务器输出模型
+class BorrowRecord(BorrowRecordIn):
+    borrowed_at: datetime  # 什么时候借的
 
 
 class Book(BookBase):
 
     first_published:int=Field(ge=1000,le=2100)
     reprint_year:int|None=None
-
 
     #跨字段验证
     @model_validator(mode="after")
@@ -83,6 +98,7 @@ class BookOut(BookBase):
     id :int
     first_published: int
     reprint_year: int|None=None
+    records: list[BorrowRecord] = []
 
 
 
@@ -97,7 +113,14 @@ library_list=[
         "publisher": {"name": "天津出版社", "city": "天津"},
         "tags": ["liusihan", "nb"],
         "first_published": 1990,
-        "reprint_year": 2020
+        "reprint_year": 2020,
+        "records":[
+            {
+                "borrower":"liusihan",
+                "borrowed_at":"1234",
+                "returned":False
+            }
+        ]
     },
     {
         "id": 2,
@@ -107,7 +130,14 @@ library_list=[
         "publisher": {"name": "北京出版社", "city": "北京"},
         "tags": ["哈哈哈哈", "nb"],
         "first_published": 1990,
-        "reprint_year": 2020
+        "reprint_year": 2020,
+        "records": [
+            {
+                "borrower": "han",
+                "borrowed_at": "34",
+                "returned": False
+            }
+        ]
     }
 
 ]
@@ -126,8 +156,9 @@ async def get_books(keyword:str=""):
 @app.post('/books',tags=["books"],status_code=201,response_model=BookOut)
 async def create_book(book:Book):
     id=max([book["id"] for book in library_list],default=0)+1
-    new_book=book.model_dump()
+    new_book = book.model_dump()
     new_book["id"]=id
+    new_book["records"]=[]
     library_list.append(new_book)
     return new_book
 
@@ -176,4 +207,23 @@ async def delete_book(id:int):
             library_list.remove(book)
             return
     raise HTTPException(status_code=404,detail=f'not found {id}')
+
+#借阅图书业务
+@app.post('/books/{book_id}/records',tags=["records"],status_code=201,response_model=BookOut)
+async def add_record(book_id:int,borrow:BorrowRecordIn):
+    for item in library_list:
+        if item["id"]==book_id:
+            records=borrow.model_dump()
+            records["borrowed_at"]=datetime.now()
+            item["records"].append(records)
+            return item
+    raise HTTPException(status_code=404,detail=f'not found {book_id}')
+
+#图书借阅记录查询
+@app.get('/books/{book_id}/records',tags=["records"],response_model=list[BorrowRecord])
+async def get_record(book_id:int):
+    for item in library_list:
+        if item["id"]==book_id:
+            return item["records"]
+    raise HTTPException(status_code=404,detail=f'not found {book_id}')
 
