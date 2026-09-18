@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from fastapi import Depends
 from fastapi import HTTPException,FastAPI
 from pydantic import BaseModel, Field, field_validator, model_validator,ConfigDict
 
@@ -141,6 +141,18 @@ library_list=[
     }
 
 ]
+
+#依赖函数
+def get_book_or_404(book_id:int)->dict:
+    for item in library_list:
+        if item["id"] == book_id:
+            return item
+    raise HTTPException(status_code=404, detail=f'not found {book_id}')
+
+
+
+
+
 @app.get('/books',tags=["books"],response_model=list[BookOut])
 async def get_books(keyword:str=""):
     if not keyword:
@@ -160,70 +172,51 @@ async def create_book(book:Book):
     new_book["id"]=id
     new_book["records"]=[]
     library_list.append(new_book)
-    return new_book
+    return new_bookbook:dict=Depends(get_book_or_404)
 
-@app.get('/books/{id}',tags=["books"],response_model=BookOut)
-async def get_book(id:int):
-    for book in library_list:
-        if book["id"]==id:
-            return book
-    raise HTTPException(status_code=404,detail=f'not found {id}')
+@app.get('/books/{book_id}',tags=["books"],response_model=BookOut)
+async def get_book(book=Depends(get_book_or_404)):
+    return book
 
-@app.put('/books/{id}',tags=["books"],response_model=BookOut)
-async def update_book(id:int,book:Book):
-    #先验证一下是否有这个id
-    for item in library_list:
-        if item["id"]==id:
-            item.update(book.model_dump())
-            return item
-    raise HTTPException(status_code=404,detail=f'not found {id}')
+@app.put('/books/{book_id}',tags=["books"],response_model=BookOut)
+async def update_book(bookIn:Book,book:dict=Depends(get_book_or_404)):
+    book.update(bookIn.model_dump())
+    return book
 
 
-@app.patch('/books/{id}',tags=["books"],response_model=BookOut)
-async def patch_book(id:int,book:BookPatch):
-    for item in library_list:
-        if item["id"]==id:
-            if book.author is not None:
-                item["author"]=book.author
-            if book.title is not None:
-                item["title"]=book.title
-            if book.price is not None:
-                item["price"]=book.price
-            if book.publisher is not None:
-                item["publisher"]=book.publisher.model_dump()
-            if book.tags  is not None:
-                item["tags"]=book.tags
-            if book.first_published is not None:
-                item["first_published"]=book.first_published
-            if book.reprint_year is not None:
-                item["reprint_year"]=book.reprint_year
-            return item
-    raise HTTPException(status_code=404,detail=f'not found {id}')
 
-@app.delete('/books/{id}',tags=["books"],status_code=204)
-async def delete_book(id:int):
-    for book in library_list:
-        if book["id"]==id:
-            library_list.remove(book)
-            return
-    raise HTTPException(status_code=404,detail=f'not found {id}')
+@app.patch('/books/{book_id}',tags=["books"],response_model=BookOut)
+async def patch_book(book:BookPatch,item:dict=Depends(get_book_or_404)):
+    if book.author is not None:
+        item["author"] = book.author
+    if book.title is not None:
+        item["title"] = book.title
+    if book.price is not None:
+        item["price"] = book.price
+    if book.publisher is not None:
+        item["publisher"] = book.publisher.model_dump()
+    if book.tags is not None:
+        item["tags"] = book.tags
+    if book.first_published is not None:
+        item["first_published"] = book.first_published
+    if book.reprint_year is not None:
+        item["reprint_year"] = book.reprint_year
+    return item
+
+@app.delete('/books/{book_id}',tags=["books"],status_code=204)
+async def delete_book(book:dict=Depends(get_book_or_404)):
+    library_list.remove(book)
+    return
 
 #借阅图书业务
 @app.post('/books/{book_id}/records',tags=["records"],status_code=201,response_model=BookOut)
-async def add_record(book_id:int,borrow:BorrowRecordIn):
-    for item in library_list:
-        if item["id"]==book_id:
-            records=borrow.model_dump()
-            records["borrowed_at"]=datetime.now()
-            item["records"].append(records)
-            return item
-    raise HTTPException(status_code=404,detail=f'not found {book_id}')
-
+async def add_record(borrow:BorrowRecordIn,book:dict=Depends(get_book_or_404)):
+    records = borrow.model_dump()
+    records["borrowed_at"] = datetime.now()
+    book["records"].append(records)
+    return book
 #图书借阅记录查询
 @app.get('/books/{book_id}/records',tags=["records"],response_model=list[BorrowRecord])
-async def get_record(book_id:int):
-    for item in library_list:
-        if item["id"]==book_id:
-            return item["records"]
-    raise HTTPException(status_code=404,detail=f'not found {book_id}')
+async def get_record(book:dict=Depends(get_book_or_404)):
+    return book["records"]
 
