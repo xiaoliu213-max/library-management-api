@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import Depends
 from fastapi import HTTPException,FastAPI
 from pydantic import BaseModel, Field, field_validator, model_validator,ConfigDict
-
+import time
 
 app=FastAPI()
 
@@ -150,11 +150,28 @@ def get_book_or_404(book_id:int)->dict:
     raise HTTPException(status_code=404, detail=f'not found {book_id}')
 
 
+#yield依赖
+def log_request():
+    start=time.perf_counter()
+    print("[计时]请求开始")
+    try:
+        yield {"start": start}
+    finally:
+        elapsed = time.perf_counter() - start
+        print(f"[计时]请求结束，耗时{elapsed * 1000:.1f}ms")
+
+def get_config()->dict:
+    return {"max_records":2}
+
+def get_max_records(config:dict=Depends(get_config))->int:
+    return config["max_records"]
+
+
 
 
 
 @app.get('/books',tags=["books"],response_model=list[BookOut])
-async def get_books(keyword:str=""):
+async def get_books(keyword:str="",timer=Depends(log_request)):
     if not keyword:
         return library_list
     else:
@@ -172,10 +189,10 @@ async def create_book(book:Book):
     new_book["id"]=id
     new_book["records"]=[]
     library_list.append(new_book)
-    return new_bookbook:dict=Depends(get_book_or_404)
+    return new_book
 
 @app.get('/books/{book_id}',tags=["books"],response_model=BookOut)
-async def get_book(book=Depends(get_book_or_404)):
+async def get_book(timer=Depends(log_request),book=Depends(get_book_or_404)):
     return book
 
 @app.put('/books/{book_id}',tags=["books"],response_model=BookOut)
@@ -208,9 +225,15 @@ async def delete_book(book:dict=Depends(get_book_or_404)):
     library_list.remove(book)
     return
 
+
+
+
+
 #借阅图书业务
 @app.post('/books/{book_id}/records',tags=["records"],status_code=201,response_model=BookOut)
-async def add_record(borrow:BorrowRecordIn,book:dict=Depends(get_book_or_404)):
+async def add_record(borrow:BorrowRecordIn,book:dict=Depends(get_book_or_404),count:int=Depends(get_max_records)):
+    if len(book["records"]) >= count:
+        raise HTTPException(status_code=400, detail="借阅图书已经达到上限")
     records = borrow.model_dump()
     records["borrowed_at"] = datetime.now()
     book["records"].append(records)
