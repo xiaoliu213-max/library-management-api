@@ -49,6 +49,10 @@ class  Book(Base):
     price :Mapped[int]
     first_published:Mapped[int]
     reprint_year:Mapped[int|None]=mapped_column(default=None)
+
+    # models_db.py → class Book 里
+    isbn: Mapped[str | None] = mapped_column(String(20), default=None)
+
     #外键
     publisher_id:Mapped[int]=mapped_column(ForeignKey("publishers.id")) #外键列
     publisher:Mapped["Publisher"]=relationship(back_populates="books") #导航
@@ -67,7 +71,6 @@ class BorrowRecord(Base):
     __tablename__="borrow_records"
 
 
-    
     id :Mapped[int]=mapped_column(primary_key=True,autoincrement=True)
     borrower:Mapped[str]=mapped_column(String(100))
     borrowed_at:Mapped[datetime]=mapped_column(DateTime,default=datetime.now)
