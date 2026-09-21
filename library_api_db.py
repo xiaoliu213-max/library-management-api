@@ -2,7 +2,7 @@ from fastapi import Depends,HTTPException,FastAPI
 from pydantic import BaseModel,ConfigDict,Field
 from sqlalchemy import or_,select
 from sqlalchemy.orm import Session
-
+from datetime import datetime
 from database import get_db
 import models_db 
 
@@ -40,6 +40,13 @@ class BookPatch(Base):
     reprint_year: int | None = None
 
 
+class BorrowRecordIn(Base):
+    borrower:str=Field(min_length=1,max_length=100)
+    note:str|None=Field(default=None,min_length=1,max_length=100)
+
+
+
+
 #Out模型
 class PublisherOut(Base):
     name:str
@@ -55,6 +62,18 @@ class CategoryOut(Base):
 class TranslatorOut(Base):
     name:str
 
+
+
+
+class BorrowRecordOut(Base):
+    id :int
+    borrower:str
+    note:str|None=None
+    borrowed_at: datetime
+    returned: bool
+
+
+
 class BookOut(Base):
     id :int
     title: str
@@ -66,6 +85,8 @@ class BookOut(Base):
     tags:list[TagOut]
     category:CategoryOut
     translators:list[TranslatorOut]
+    records:list[BorrowRecordOut]
+
 
 
 def get_or_create(db, model, name, **extra):
@@ -108,7 +129,11 @@ def create_book(book_in:BookIn,db:Session=Depends(get_db)):
     db.refresh(book)
     return book
 
-@app.get("/books/{book_id}",response_model=BookOut,status_code=200)
+
+
+
+
+@app.get("/books/{book_id}/",response_model=BookOut,status_code=200)
 def read_book(book:models_db.Book=Depends(get_book_or_404)):
 
     return book
@@ -161,4 +186,52 @@ def patch_book(book_in:BookPatch,db:Session =Depends(get_db),book=Depends(get_bo
 def delete_book(db:Session=Depends(get_db),book:models_db.Book=Depends(get_book_or_404)):
     db.delete(book)
     db.commit()
+
+
+    #借阅功能
+
+
+@app.get("/books/{book_id}/records",response_model=list[BorrowRecordOut],status_code=200)
+def get_book_records(book=Depends(get_book_or_404),db:Session=Depends(get_db)):
+    if book.reprint_year is  None:
+        return []
+    return book.records
+
+
+
+
+@app.post("/books/{book_id}/records",response_model=BookOut,status_code=201)
+def read_records(borrow:BorrowRecordIn,
+                 book_id:int,
+                 book:models_db.Book=Depends(get_book_or_404),
+                 db:Session=Depends(get_db)):
+    record=models_db.BorrowRecord(
+        borrower=borrow.borrower,
+        note=borrow.note,
+    )
+    book.records.append(record)
+    db.commit()
+    db.refresh(book)
+    return book
+
+@app.patch("/books/{book_id}/records/{record_id}",status_code=200)
+def update_record(
+        book_id:int,
+        record_id:int,
+        book=Depends(get_book_or_404),
+        db:Session=Depends(get_db)):
+    if record_id is None:
+        return  {"message":"请输入record_id"}
+    for item in book.records:
+        if item.id == record_id:
+            item.returned=True
+            db.commit()
+            db.refresh(item)
+            return item
+    raise HTTPException(status_code=404,deatil=f"没有{record_id}这条记录")
+
+
+
+
+
 

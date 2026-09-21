@@ -75,6 +75,7 @@ class BorrowRecord(Base):
     borrower:Mapped[str]=mapped_column(String(100))
     borrowed_at:Mapped[datetime]=mapped_column(DateTime,default=datetime.now)
     returned: Mapped[bool] = mapped_column(Boolean, default=False)
+    note: Mapped[str | None] = mapped_column(String(100), default=None)
     #外键
     book_id: Mapped[int] = mapped_column(ForeignKey("books.id"))
 
