@@ -1,11 +1,16 @@
-from pydantic import Field
-
-from .base import StrictBase
-from .publisher import CategoryOut,PublisherOut,TagOut,TranslatorOut
-from .record import BorrowRecordOut
 
 
-class BookFlat(StrictBase):
+#存放pydantic校验体模型
+from pydantic import BaseModel,ConfigDict,Field
+
+from datetime import datetime
+class Base(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+        str_strip_whitespace=True
+    )
+
+class BookFlat(Base):
     title: str = Field(min_length=1,max_length=100)
     author:str = Field(min_length=1,max_length=20)
     price:int = Field(ge=1,le=100)
@@ -21,7 +26,9 @@ class BookIn(BookFlat):
     translator_names: list[str] = []
 
 
-class BookPatch(StrictBase):
+
+
+class BookPatch(Base):
     title: str |None= Field(default=None,min_length=1, max_length=100)
     author: str |None= Field(default=None,min_length=1, max_length=20)
     price: int |None= Field(default=None,ge=1, le=100)
@@ -29,7 +36,41 @@ class BookPatch(StrictBase):
     reprint_year: int | None = None
 
 
-class BookOut(StrictBase):
+class BorrowRecordIn(Base):
+    borrower:str=Field(min_length=1,max_length=100)
+    note:str|None=Field(default=None,min_length=1,max_length=100)
+
+
+
+
+#Out模型
+class PublisherOut(Base):
+    name:str
+    city:str|None=None
+
+
+class TagOut(Base):
+    name:str
+
+class CategoryOut(Base):
+    name:str
+
+class TranslatorOut(Base):
+    name:str
+
+
+
+
+class BorrowRecordOut(Base):
+    id :int
+    borrower:str
+    note:str|None=None
+    borrowed_at: datetime
+    returned: bool
+
+
+
+class BookOut(Base):
     id :int
     title: str
     author:str

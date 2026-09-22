@@ -1,16 +1,13 @@
 from fastapi import FastAPI
+from routers import books
+from routers import records
+
+
+
+
 
 app = FastAPI()
+app.include_router(books.router)
+app.include_router(records.router)
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.get("/about")
-async def about():
-    return {"message": "Hello World",
-            "name":"liusihan",
-            "age":16,
-            "learning":"fastapi"
-            }
