@@ -1,11 +1,9 @@
 
-
-from fastapi import Depends,HTTPException,FastAPI
+from fastapi import Depends,HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 import models_db
 from dependencies import get_book_or_404
-from crud import get_or_create
 from  schemas import BorrowRecordOut,BorrowRecordIn,BookOut
 from fastapi import APIRouter
 
