@@ -1,9 +1,21 @@
-
-
 #存放pydantic校验体模型
 from pydantic import BaseModel,ConfigDict,Field
-
 from datetime import datetime
+from typing import  Generic,TypeVar
+
+
+
+#分页模型
+T=TypeVar("T")
+class Page(BaseModel,Generic[T]):
+    total:int
+    page:int
+    size:int
+    items:list[T]
+
+
+
+
 class Base(BaseModel):
     model_config = ConfigDict(
         extra="forbid",

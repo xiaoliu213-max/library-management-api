@@ -1,17 +1,102 @@
 
-from fastapi import Depends
-from sqlalchemy import or_,select
+from fastapi import Depends,APIRouter,Query,HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from database import get_db
 import models_db
 from dependencies import get_book_or_404
-from crud import get_or_create
-from  schemas import BookFlat,BookIn,BookOut,BookPatch
-from fastapi import APIRouter
+from crud import get_or_create,paginate
+from  schemas import BookFlat,BookIn,BookOut,BookPatch,Page
 
 
 
 router = APIRouter(prefix="/books", tags=["books"])
+
+
+SORTABLE={
+
+    "id": models_db.Book.id,
+    "title": models_db.Book.title,
+    "author": models_db.Book.author,
+    "price": models_db.Book.price,
+    "first_published": models_db.Book.first_published,
+    "reprint_year": models_db.Book.reprint_year,
+}
+
+
+def apply_sort(stmt,sort:str|None):
+    cols=[]
+    has_id=False
+    if sort:
+        for token in sort.split(","):
+            token=token.strip()
+            if not token:
+                continue
+            desc=token.startswith("-")
+            name=token.lstrip("-")
+            col=SORTABLE.get(name)
+            if col is None:
+                raise HTTPException(status_code=400,detail=f"不支持的排序字段：{name}")
+            if name=="id":
+                has_id=True
+
+            cols.append(col.desc() if desc else col.asc())
+    if not has_id:
+        cols.append(models_db.Book.id.asc())
+    return stmt.order_by(*cols)
+
+
+
+
+@router.get("/{book_id}",response_model=BookOut,status_code=200)
+def read_book(book:models_db.Book=Depends(get_book_or_404)):
+
+    return book
+
+
+#模糊查询
+@router.get("",response_model=Page[BookOut],status_code=200)
+def list_books(
+            page:int=Query(1,ge=1,description="页码从1开始"),
+              size:int=Query(10,ge=1,le=100,description="每页条数，最大 100"),
+              keyword:str|None=Query(None,description="按书名或作者模糊搜索"),
+              author:str|None=Query(None,description="按作者精确匹配"),
+              category:str|None=Query(None,description="按分类名筛选"),
+              price_min:int|None=Query(None,ge=0,description="价格下限（含）"),
+              price_max:int|None=Query(None,ge=0,description="价格上限（含）"),
+              sort:str|None=Query(None,description="排序，逗号分隔，- 表示降序，如 -price,title"),
+             db:Session=Depends(get_db)):
+    # 积累过滤条件
+    conds=[]
+    if keyword:
+        conds.append(models_db.Book.title.contains(keyword) | models_db.Book.author.contains(keyword))
+    if author:
+        conds.append(models_db.Book.author==author)
+    if category:
+        conds.append(models_db.Book.category.has(models_db.Category.name==category))
+    if price_min is not None:
+        conds.append(models_db.Book.price>=price_min)
+    if price_max is not None:
+        conds.append(models_db.Book.price<=price_max)
+
+    #组装查询
+
+    stmt = select(models_db.Book)
+    if conds:
+        stmt = stmt.where(*conds)
+
+        # 3 排序
+    stmt = apply_sort(stmt, sort)
+
+        # 4 分页
+    total, items = paginate(db, stmt, page, size)
+
+    return {
+            "total": total,
+            "page": page,
+            "size": size,
+            "items": items
+        }
 
 
 @router.post("",response_model=BookOut,status_code=201)
@@ -32,30 +117,6 @@ def create_book(book_in:BookIn,db:Session=Depends(get_db)):
     db.commit()
     db.refresh(book)
     return book
-
-
-
-
-
-@router.get("/{book_id}/",response_model=BookOut,status_code=200)
-def read_book(book:models_db.Book=Depends(get_book_or_404)):
-
-    return book
-
-@router.get("",response_model=list[BookOut],status_code=200)
-def select_book(keyword:str="",db:Session=Depends(get_db)):
-    stmt=select(models_db.Book)
-    if keyword:
-        stmt=stmt.where(
-            or_(
-                models_db.Book.title.contains(keyword),
-                models_db.Book.author.contains(keyword)
-            )
-        )
-    return db.scalars(stmt).all()
-
-
-
 
 
 
