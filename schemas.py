@@ -94,3 +94,14 @@ class BookOut(Base):
     category:CategoryOut
     translators:list[TranslatorOut]
     records:list[BorrowRecordOut]
+
+class UserIn(Base):
+    username:str
+    password:str
+
+
+class UserOut(Base):
+    id:int
+    username:str
+    is_active: bool
+    is_admin: bool

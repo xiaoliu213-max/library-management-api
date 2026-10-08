@@ -99,3 +99,12 @@ class Translator(Base):
     id :Mapped[int]=mapped_column(primary_key=True,autoincrement=True)
     name :Mapped[str]=mapped_column(String(50),unique=True)
     books:Mapped[list["Book"]]=relationship(back_populates="translators",secondary=book_translators)
+
+class User(Base):
+    __tablename__="users"
+
+    id:Mapped[int]=mapped_column(primary_key=True,autoincrement=True)
+    username:Mapped[str]=mapped_column(String(100),unique=True)
+    hashed_password: Mapped[str] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)

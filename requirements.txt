@@ -1,0 +1,23 @@
+# 图书管理 API —— 直接依赖清单
+# 安装：pip install -r requirements.txt
+
+# --- Web 框架 ---
+fastapi==0.141.1
+uvicorn==0.52.4
+
+# --- 数据校验与配置 ---
+pydantic==2.13.5
+pydantic-settings==2.15.0
+
+# --- 数据库 ---
+SQLAlchemy==2.0.54
+PyMySQL==1.2.3
+alembic==1.20.0
+
+# --- 认证（Phase 6）---
+pwdlib[argon2]==0.3.1
+PyJWT==2.15.1
+python-multipart==0.0.32
+
+# --- 测试（Phase 8 会用）---
+httpx==0.28.1
