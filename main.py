@@ -18,7 +18,7 @@ app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
-app.include_router(books.router)
-app.include_router(records.router)
+app.include_router(books.router,prefix="/v1")
+app.include_router(records.router,prefix="/v1")
 
 

@@ -23,7 +23,7 @@ async def http_exception_handler(request:Request,exc:StarletteHTTPException):
 async def validation_exception_handler(request:Request,exc:RequestValidationError):
     """接管 FastAPI 的参数校验失败（422）"""
     errors=[
-        {"field":".".join(str(x) for x in e["loc"][1:]),"message":e["msg"]}
+        {"field":".".join(str(x) for x in e["loc"][1:]),"message": e["msg"]}
         for e in exc.errors()
     ]
     return JSONResponse(
