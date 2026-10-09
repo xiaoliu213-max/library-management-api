@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from database import get_db
 import models_db
-from dependencies import get_book_or_404,get_current_user
+from dependencies import get_book_or_404,get_current_user,get_current_admin
 from crud import get_or_create,paginate
 from  schemas import BookFlat,BookIn,BookOut,BookPatch,Page
 
@@ -148,7 +148,7 @@ def patch_book(book_in:BookPatch,db:Session =Depends(get_db),book=Depends(get_bo
     db.refresh(book)
     return book
 
-@router.delete("/{book_id}",status_code=204,dependencies=[Depends(get_current_user)])
+@router.delete("/{book_id}",status_code=204,dependencies=[Depends(get_current_admin)])
 def delete_book(db:Session=Depends(get_db),book:models_db.Book=Depends(get_book_or_404)):
     db.delete(book)
     db.commit()

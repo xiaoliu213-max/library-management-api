@@ -36,3 +36,10 @@ def get_current_user(token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)
         raise HTTPException(status_code=403,detail="用户已被禁用")
 
     return user
+
+
+def get_current_admin(user:models_db.User=Depends(get_current_user)):
+    """在get_current_user基础之上，再要求管理员身份"""
+    if not user.is_admin:
+        raise HTTPException(status_code=403,detail="需要管理员权限")
+    return user
