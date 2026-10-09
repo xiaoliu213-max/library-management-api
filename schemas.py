@@ -105,3 +105,8 @@ class UserOut(Base):
     username:str
     is_active: bool
     is_admin: bool
+
+
+class TokenOut(Base):
+    access_token:str
+    token_type:str= 'bearer'

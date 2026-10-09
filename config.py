@@ -1,4 +1,6 @@
 # my_first_api/config.py
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -9,6 +11,10 @@ class Settings(BaseSettings):
     DB_HOST: str = "localhost"
     DB_PORT: int = 3306
     DB_NAME: str = "library"
+
+
+    SECRET_KEY : str
+    ACCESS_TOKEN_EXPIRE_MINUTES : int =30
 
     @property
     def database_url(self) -> str:
