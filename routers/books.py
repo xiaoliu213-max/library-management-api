@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from database import get_db
 import models_db
-from dependencies import get_book_or_404
+from dependencies import get_book_or_404,get_current_user
 from crud import get_or_create,paginate
 from  schemas import BookFlat,BookIn,BookOut,BookPatch,Page
 
@@ -99,7 +99,7 @@ def list_books(
         }
 
 
-@router.post("",response_model=BookOut,status_code=201)
+@router.post("",response_model=BookOut,status_code=201,dependencies=[Depends(get_current_user)])
 def create_book(book_in:BookIn,db:Session=Depends(get_db)):
     publisher=get_or_create(db,models_db.Publisher,book_in.publisher_name,city=None)
     category=get_or_create(db,models_db.Category,book_in.category_name)
@@ -120,7 +120,7 @@ def create_book(book_in:BookIn,db:Session=Depends(get_db)):
 
 
 
-@router.put("/{book_id}",response_model=BookOut,status_code=200)
+@router.put("/{book_id}",response_model=BookOut,status_code=200,dependencies=[Depends(get_current_user)])
 def update_book(book_in:BookFlat,book:models_db.Book=Depends(get_book_or_404),db:Session=Depends(get_db)):
     book.title=book_in.title
     book.author=book_in.author
@@ -132,7 +132,7 @@ def update_book(book_in:BookFlat,book:models_db.Book=Depends(get_book_or_404),db
     return book
 
 
-@router.patch("/{book_id}",response_model=BookOut,status_code=200)
+@router.patch("/{book_id}",response_model=BookOut,status_code=200,dependencies=[Depends(get_current_user)])
 def patch_book(book_in:BookPatch,db:Session =Depends(get_db),book=Depends(get_book_or_404)):
     if book_in.title is not None:
         book.title=book_in.title
@@ -148,7 +148,7 @@ def patch_book(book_in:BookPatch,db:Session =Depends(get_db),book=Depends(get_bo
     db.refresh(book)
     return book
 
-@router.delete("/{book_id}",status_code=204)
+@router.delete("/{book_id}",status_code=204,dependencies=[Depends(get_current_user)])
 def delete_book(db:Session=Depends(get_db),book:models_db.Book=Depends(get_book_or_404)):
     db.delete(book)
     db.commit()

@@ -3,19 +3,18 @@ from fastapi import Depends,HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 import models_db
-from dependencies import get_book_or_404
+from dependencies import get_book_or_404,get_current_user
 from  schemas import BorrowRecordOut,BorrowRecordIn,BookOut
 from fastapi import APIRouter
 
-router=APIRouter(prefix="/books",tags=["records"])
+router=APIRouter(prefix="/books",tags=["records"],dependencies=[Depends(get_current_user)])
 
 
 
 
 @router.get("/{book_id}/records",response_model=list[BorrowRecordOut],status_code=200)
 def get_book_records(book=Depends(get_book_or_404),db:Session=Depends(get_db)):
-    if book.reprint_year is  None:
-        return []
+    
     return book.records
 
 
@@ -48,4 +47,4 @@ def update_record(
             db.commit()
             db.refresh(item)
             return item
-    raise HTTPException(status_code=404,deatil=f"没有{record_id}这条记录")
+    raise HTTPException(status_code=404,detail=f"没有{record_id}这条记录")
