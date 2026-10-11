@@ -24,3 +24,6 @@ app.include_router(records.router,prefix="/v1")
 app.include_router(users.router,prefix="/v1")
 app.include_router(auth.router,prefix="/v1")
 
+@app.get("/health",tags=["system"])
+def health_check():
+    return {"status": "ok"}

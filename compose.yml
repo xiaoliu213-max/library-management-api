@@ -1,0 +1,23 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    ports:
+      - "3307:3306"                    # ①
+    volumes:
+      - mysqldata:/var/lib/mysql
+
+  api:
+    build: .
+    ports:
+      - "8000:8080"                    # ②
+    env_file: .env
+    environment:
+      DB_HOST: db                    # ③
+    depends_on:
+      - db
+
+volumes:
+  mysqldata:                       # ④
