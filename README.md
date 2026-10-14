@@ -14,6 +14,9 @@
 - **统一错误响应** —— 所有错误返回 `{code, message, detail}` 格式
 - **API 版本化** —— 路径版本 `/v1`
 - **数据库迁移** —— Alembic 管理表结构变更
+- **测试** —— pytest + TestClient，**12 个用例**覆盖 CRUD、认证、权限与错误路径；测试库独立隔离、可重复运行
+- **容器化** —— Docker 多阶段构建（非 root / HEALTHCHECK）+ Docker Compose 一键启动 API + MySQL
+- **CORS 与中间件** —— 跨源白名单、请求耗时统计（`X-Process-Time` 响应头）
 
 ---
 
@@ -33,10 +36,35 @@
 | pwdlib[argon2] | 0.3.1 | 密码哈希（Argon2id） |
 | PyJWT | 2.15.1 | JWT 签发与验签 |
 | python-multipart | 0.0.32 | 表单解析（登录接口用） |
+| pytest | 9.1.1 | 测试框架 |
+| httpx | 0.28.1 | TestClient 依赖的 HTTP 客户端 |
+| Docker / Compose | 29.8.2 / v5.5.1 | 容器化与编排 |
 
 ---
 
 ## 快速开始
+
+### 方式 A：Docker 一键启动（推荐）
+
+> 前提：已安装 Docker Desktop。**不需要**本机装 MySQL、不需要手动建库。
+
+```bash
+cp .env.example .env                          # 填入 DB_PASSWORD / SECRET_KEY
+docker compose up -d                          # 起 MySQL + API（首次会拉取镜像）
+docker compose exec api alembic upgrade head  # 建表（建议等 MySQL 就绪后再执行）
+```
+
+打开 <http://127.0.0.1:8000/docs> 即可使用。
+
+> 💡 首次启动 MySQL 需要十几秒初始化。若 `api` 容器反复重启，等 MySQL 就绪即可（用 `docker compose ps` 看状态）。
+
+> 📌 Compose 会起两个容器：`db`（MySQL）和 `api`（本应用）。MySQL 映射到宿主机 **3307**，避免与本机 3306 冲突。
+
+---
+
+### 方式 B：本地运行
+
+**（不依赖 Docker，需要本机已装 MySQL）**
 
 ### 1. 准备数据库
 
@@ -165,6 +193,37 @@ curl http://127.0.0.1:8080/v1/books/1/records \
 
 ---
 
+## 测试
+
+使用 **pytest + FastAPI TestClient** 编写了 **12 个测试用例**，覆盖正常路径与错误路径：
+
+| 分类 | 用例 |
+|---|---|
+| 读取（免认证） | 空列表 200、资源不存在 404、路径参数类型错误 422 |
+| 写入 + 认证 | 注册用户、带 token 创建图书 |
+| 错误路径 | 无 token 401、假 token 401、普通用户删书 403、管理员删书 204、删不存在的书 404 |
+| 隔离自检 | 确认测试连的是独立测试库（而非开发库） |
+
+```bash
+pytest -v
+```
+
+**测试隔离方案**（`tests/conftest.py`）：
+
+1. **独立测试库** `library_test` —— 测试不碰开发库
+2. **事务回滚** —— 每个测试跑在一个"永不提交"的事务里，结束时 `rollback`，所有改动一次撤销 → **测试可重复运行**
+3. **依赖覆盖** —— `app.dependency_overrides[get_db]` 把数据库 session 换成测试库的
+
+> 业务代码**一行都不用改** —— 因为 `Depends(get_db)` 已经把"session 从哪来"外置了。这是依赖注入在测试上的最大回报。
+
+首次运行前需手动建测试库（`create_all` 只能建表，不能建库）：
+
+```sql
+CREATE DATABASE library_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+---
+
 ## 项目结构
 
 ```
@@ -183,7 +242,15 @@ my_first_api/
 │   ├── users.py        #   POST /users
 │   ├── books.py        #   /books 书目管理
 │   └── records.py      #   /books/{id}/records 借阅记录
+├── tests/              # 测试
+│   ├── conftest.py     #   公共 fixture（测试库 / 事务回滚 / 依赖覆盖）
+│   ├── test_books.py   #   CRUD + 认证 + 权限用例
+│   └── test_health.py  #   健康检查 + 隔离自检
 ├── migrations/         # Alembic 迁移脚本
+├── Dockerfile          # 生产级镜像（多阶段 / 非 root / HEALTHCHECK）
+├── .dockerignore       # 构建上下文裁剪（构建上下文 56 kB）
+├── compose.yml         # API + MySQL 一键编排
+├── pytest.ini          # pytest 配置（pythonpath / testpaths）
 ├── requirements.txt    # 直接依赖清单
 ├── alembic.ini         # Alembic 配置
 └── .env.example        # 环境变量模板
@@ -206,11 +273,12 @@ my_first_api/
 - **登录失败统一返回同一句错误**，防止攻击者通过错误信息枚举出真实存在的用户名。
 - **响应模型作为白名单**，保证 `hashed_password` 永远不会被序列化输出。
 - **配置集中管理且启动即校验** —— `config.py` 的模块级 `Settings()` 在 import 时执行，配置缺失或类型错误会在启动瞬间报错，而不是等到某个接口被调用时才崩。
+- **测试隔离靠"依赖覆盖"而非改代码** —— `app.dependency_overrides` 把 `get_db` 换成测试库的 session，业务代码零改动；测试跑在永不提交的事务里，结束即回滚，可重复运行。
+- **容器不打包配置** —— `.env` 被 `.dockerignore` 排除，密钥通过 `env_file` 在运行时注入；配置与镜像分离，同一镜像可用于不同环境。
 
 ---
 
 ## 后续计划
 
-- [ ] pytest 单元测试与集成测试（TestClient + 依赖覆盖）
-- [ ] Docker Compose 一键启动（MySQL + API）
 - [ ] 借阅记录关联用户（支持"我的借阅记录"）
+- [ ] CI（GitHub Actions）自动运行测试
