@@ -12,6 +12,11 @@ from exceptions import (
     unhandled_exception_handler,
 )
 
+import time
+from fastapi import Request
+from fastapi.middleware.cors import CORSMiddleware
+
+
 app = FastAPI()
 
 #将异常处理器注册到FAstAPI应用
@@ -27,3 +32,19 @@ app.include_router(auth.router,prefix="/v1")
 @app.get("/health",tags=["system"])
 def health_check():
     return {"status": "ok"}
+
+@app.middleware("http")
+async def add_process_time(request: Request,call_next):
+    start = time.perf_counter()  # ① 请求进来时：记下开始时间
+    response = await call_next(request)  # ② 把请求交给下一站（最终到路由函数）
+    elapsed = time.perf_counter() - start  # ③ 响应回来了：算出耗时
+    response.headers["X-Process-Time"] = f"{elapsed:.4f}"
+    return response  # ④ 把响应交出去
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],   # 开发环境
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
