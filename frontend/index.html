@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵书阁 · 图书管理系统</title>
+<link rel="stylesheet" href="css/style.css?v=4">
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/addons/"
+  }
+}
+</script>
+</head>
+<body>
+
+<canvas id="stage"></canvas>
+
+<!-- 加载遮罩 -->
+<div id="loader" class="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-text">灵阁开启中…</div>
+</div>
+
+<!-- 玄关题字：粒子流 + 点击波动 -->
+<div id="gate-title" class="gate-title">
+  <div class="gt-line">
+    <span class="gt-char">灵</span><span class="gt-char">书</span><span class="gt-char">阁</span>
+  </div>
+  <div class="gate-sub">万卷藏于阁 · 灵契启于门</div>
+  <canvas id="gate-canvas"></canvas>
+</div>
+
+<!-- 左上：门匾 -->
+<div class="hud plaque">
+  <h1 class="plaque-title">灵 书 阁</h1>
+  <div class="plaque-sub">
+    <span id="pulse-dot" class="pulse-dot"></span>
+    <span id="health-text">灵脉探测中…</span>
+    <span class="divider">◆</span>
+    <span>典籍 <b id="book-count">-</b> 卷</span>
+  </div>
+</div>
+
+<!-- 顶部中央：检索法阵 -->
+<div class="hud toolbar">
+  <div class="search-wrap">
+    <input id="search-box" class="input toolbar-search" type="text" placeholder="搜索书名 / 作者…">
+    <button id="search-clear" class="search-clear hidden" title="清空搜索">✕</button>
+  </div>
+  <select id="filter-category" class="input toolbar-select">
+    <option value="">全部类别</option>
+  </select>
+  <select id="filter-sort" class="input toolbar-select">
+    <option value="">默认排序</option>
+    <option value="price">灵石低 → 高</option>
+    <option value="-price">灵石高 → 低</option>
+    <option value="-first_published">新书先出</option>
+    <option value="title">书名排序</option>
+  </select>
+  <button id="filter-reset" class="btn btn-mini hidden">↺ 重置</button>
+</div>
+
+<!-- 右上：灵契（登录 / 注册） -->
+<div class="hud auth" id="auth-box">
+  <button id="auth-toggle" class="btn btn-gold">缔结灵契</button>
+  <div id="auth-panel" class="auth-panel hidden">
+    <div class="auth-tabs">
+      <button id="tab-login" class="auth-tab active">灵契登录</button>
+      <button id="tab-register" class="auth-tab">录入道籍</button>
+    </div>
+    <div class="auth-ornament">— ❖ —</div>
+    <input id="login-user" class="input" type="text" placeholder="道号 (用户名)" autocomplete="username">
+    <input id="login-pass" class="input" type="password" placeholder="口令 (密码)" autocomplete="current-password">
+    <input id="register-pass2" class="input hidden" type="password" placeholder="再诵一遍口令" autocomplete="new-password">
+    <button id="login-btn" class="btn btn-gold btn-block">缔 结 灵 契</button>
+    <button id="register-btn" class="btn btn-gold btn-block hidden">录 入 道 籍</button>
+    <div id="auth-msg" class="auth-msg"></div>
+  </div>
+  <div id="auth-user" class="auth-user hidden">
+    <span>御灵师 · <b id="auth-name"></b></span>
+    <button id="logout-btn" class="btn btn-mini">断开灵契</button>
+  </div>
+</div>
+
+<!-- 悬浮提示 -->
+<div id="tooltip" class="tooltip hidden"></div>
+
+<!-- 空库提示 -->
+<div id="empty-hint" class="empty-hint hidden">
+  灵阁空空如也 ——<br>召唤第一卷典籍吧
+</div>
+
+<!-- 右侧：典籍详情（古卷） -->
+<aside id="detail" class="detail hidden">
+  <button id="detail-close" class="detail-close">✕ 归位</button>
+  <div class="detail-corner tl"></div><div class="detail-corner br"></div>
+  <h2 id="detail-title" class="detail-title"></h2>
+  <div class="detail-cover-wrap"><img id="detail-cover" class="detail-cover" alt="封面"></div>
+  <div class="detail-attr" id="detail-attrs"></div>
+  <div class="detail-section" id="detail-tags-wrap">
+    <div class="detail-label">◈ 符印</div>
+    <div id="detail-tags" class="tag-row"></div>
+  </div>
+  <div class="detail-section" id="detail-trans-wrap">
+    <div class="detail-label">◈ 译笔</div>
+    <div id="detail-trans" class="tag-row"></div>
+  </div>
+  <div class="detail-label detail-label-gap">◈ 借阅符契</div>
+  <div id="detail-records" class="records"></div>
+  <input id="borrow-note" class="input" type="text" placeholder="借阅寄语（可选）">
+  <button id="borrow-btn" class="btn btn-gold btn-block btn-borrow">✦ 借 阅 此 卷 ✦</button>
+  <button id="destroy-btn" class="btn btn-destroy btn-block">✕ 焚 毁 此 卷</button>
+</aside>
+
+<!-- 召唤典籍（新增书目） -->
+<button id="summon-toggle" class="btn btn-gold summon-toggle">✦ 召唤典籍</button>
+<div id="summon-modal" class="modal-mask hidden">
+  <div class="modal">
+    <div class="modal-title">召 唤 新 典 籍</div>
+    <div class="form-grid">
+      <label>典籍名<input id="f-title" class="input" type="text"></label>
+      <label>作者<input id="f-author" class="input" type="text"></label>
+      <label>灵石（价格）<input id="f-price" class="input" type="number" min="0"></label>
+      <label>成书之年<input id="f-year" class="input" type="number"></label>
+      <label>书坊（出版社）<input id="f-publisher" class="input" type="text"></label>
+      <label>类别<input id="f-category" class="input" type="text" placeholder="例：科幻"></label>
+      <label>符印（逗号分隔）<input id="f-tags" class="input" type="text" placeholder="例：硬核,雨果奖"></label>
+      <label>译笔（逗号分隔）<input id="f-translators" class="input" type="text"></label>
+    </div>
+    <div class="modal-actions">
+      <button id="summon-cancel" class="btn">作罢</button>
+      <button id="summon-submit" class="btn btn-gold">召 唤</button>
+    </div>
+    <div id="summon-msg" class="auth-msg"></div>
+  </div>
+</div>
+
+<!-- 阶段切换闪光 -->
+<div id="flash"></div>
+
+<!-- 底部中央：书库分页 -->
+<div id="pager" class="pager hidden">
+  <button id="page-prev" class="btn btn-mini">‹ 上层</button>
+  <span id="page-label" data-page="1">第 1 / 1 页</span>
+  <button id="page-next" class="btn btn-mini">下层 ›</button>
+</div>
+
+<!-- 提示浮语 -->
+<div id="toast" class="toast hidden"></div>
+
+<script type="module" src="js/main.js?v=4"></script>
+</body>
+</html>

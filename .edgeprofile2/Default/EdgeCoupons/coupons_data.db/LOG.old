@@ -1,0 +1,5 @@
+2026/10/26-09:17:00.043 5554 Creating DB D:\AI-codex-projects\fastapi-learning\my_first_api\.edgeprofile2\Default\EdgeCoupons/coupons_data.db since it was missing.
+2026/10/26-09:17:00.085 5554 Reusing MANIFEST D:\AI-codex-projects\fastapi-learning\my_first_api\.edgeprofile2\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/10/26-09:17:01.783 79a4 Level-0 table #5: started
+2026/10/26-09:17:01.788 79a4 Level-0 table #5: 683284 bytes OK
+2026/10/26-09:17:01.790 79a4 Delete type=0 #3

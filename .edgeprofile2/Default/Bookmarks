@@ -1,0 +1,117 @@
+{
+   "checksum": "dc65aca77af6a8d1f77818982df7a5a6",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "date_added": "13411033083264504",
+            "date_last_used": "0",
+            "guid": "8a08b571-daea-4bfd-be13-5be0fbab1acf",
+            "id": "9",
+            "name": "127.0.0.1:8080/cookie_set",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "http://127.0.0.1:8080/cookie_set",
+            "visit_count": 1
+         }, {
+            "date_added": "13412611027529525",
+            "date_last_used": "0",
+            "guid": "631bafc5-f343-4c37-8090-4b9a6760b7e8",
+            "id": "10",
+            "name": "WE Learn",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://welearn.sflep.com/student/StudyCourse.aspx?cid=3314&classid=0&sco=m-1-1-4",
+            "visit_count": 1
+         }, {
+            "date_added": "13413532513225409",
+            "date_last_used": "13423229431130954",
+            "guid": "be156735-8a3a-4722-bac2-8669183677c0",
+            "id": "11",
+            "name": "AcWing 608. 差 - AcWing",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "https://www.acwing.com/activity/content/problem/content/543/",
+            "visit_count": 2
+         }, {
+            "date_added": "13424359266598484",
+            "date_last_used": "0",
+            "guid": "4ba4c9fc-4d7d-43f1-b897-5c8fc69df3c7",
+            "id": "12",
+            "name": "FastAPI - Swagger UI",
+            "show_icon": false,
+            "source": "sync",
+            "type": "url",
+            "url": "http://127.0.0.1:8080/docs#/default/add_user_add_add_user_get",
+            "visit_count": 1
+         }, {
+            "date_added": "13437451017728985",
+            "date_last_used": "0",
+            "guid": "180825e4-beba-4f49-bf3c-1fd5f855d283",
+            "id": "8",
+            "name": "联想服务",
+            "show_icon": false,
+            "source": "oem_preload",
+            "type": "url",
+            "url": "https://support.lenovo.com/",
+            "visit_count": 0
+         }, {
+            "date_added": "13437451017728391",
+            "date_last_used": "0",
+            "guid": "32f0dba2-be69-4ba5-9050-0c3accb09829",
+            "id": "7",
+            "name": "联想",
+            "show_icon": false,
+            "source": "oem_preload",
+            "type": "url",
+            "url": "https://www.lenovo.com/",
+            "visit_count": 0
+         } ],
+         "date_added": "13437451017504109",
+         "date_last_used": "0",
+         "date_modified": "13437451017728985",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "收藏夹栏",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "other": {
+         "children": [  ],
+         "date_added": "13437451017504109",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "其他收藏夹",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [  ],
+         "date_added": "13437451017504109",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "移动收藏夹",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "workspaces_v2": {
+         "children": [  ],
+         "date_added": "13437451017504109",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "75aa6670-344f-549d-b742-660f029506ab",
+         "id": "5",
+         "name": "工作区",
+         "source": "unknown",
+         "type": "folder"
+      }
+   },
+   "sync_metadata": "CjEKDgiIgQISCOxctnWhAQAAEgAqGDY3SlFQbXhYUUtPSjRVcWszY3c3Znc9PUgDoAYHEowBCAMShwEKHG5qZ0R1ODhlQ3J2WHA4NnBEN2ZIR2NxRnA4OD0SJGM3OTAyZmUzLWM1YTctNTQ5MS05ZTAyLTA0ZWExZTMyYzY0NBgAIAAoADDci7eemzM485S3npszQPOUt56bM0oceXpOQjAxY241NEE3Y1JVMHVUKy9QZ21UdFVvPWUAAAAAwj4CYAASrQEICxKoAQocekJFNmNkV3JoUno2QmNBcTdIOWI2NE1ZNlNrPRIkYmUxNTY3MzUtOGEzYS00NzIyLWJhYzItODY2OTE4MzY3N2MwGAAgACgAMN+68LDiMzjtxYOhvjNA7cWDob4zShxBTWtJOW1Zc20vWVlzT2V6aDJyeHp3N0tOTTA9Wh8iHdRxRWZEcGEzL0w2WUx2aVpsclFmRVdWU28yL0U9ZU7VnxrCPgJgBRKsAQgJEqcBChxUVEJXc21ST3FHQTR6QkRPbFRseHNYdTE4QW89EiQ4YTA4YjU3MS1kYWVhLTRiZmQtYmUxMy01YmUwZmJhYjFhY2YYACAAKAAwo7aa+bQzOJa5mvm0M0CWuZr5tDNKHEx2Y0RrM3JQS1YwR1VNMDdVMEwwMFVxL2N5WT1aHiIcUnZJRUhGYXFsdnpTMEF4TGM3aitiQWM2bXAwPWUAAAAAwj4CYAUSrQEIDBKoAQocQlZLc2ZMU01ya1FjdG02Q2IrZW53V09OdVA0PRIkNGJhNGM5ZmMtNGQ3ZC00M2YxLWI4OTctNWM4ZmM2OWRmM2M3GAAgACgAMOOb0cvmMzi4qtHL5jNAuKrRy+YzShxmZG1IU3QyTVRZSEtPQmpIRDhLQXdDTmlhMXc9Wh8iHep4YVZZVUsxbVhQNjJqRnBlNUhGOGhIenNKK2c9ZeHEi0rCPgJgBRKtAQgKEqgBChxoM0RLK0QvQ3dFZEo2MlRWM2xJZ25SU3dSU0E9EiQ2MzFiYWZjNS1mMzQzLTRjMzctODA5MC00YjlhNjc2MGI3ZTgYACAAKAAwqKLQ6bozOICm0Om6M0CAptDpujNKHDRuZS96Ym54Vjk2a3F5QUNVWlhxOHdacktjUT1aHyIdqUNNdCs0NFZpYmtFZ2Npdm1LdUI0TUxQajFObz1lZLHh/sI+AmAFEowBCAEShwEKHHl4Si82ZnZrZWNyN2twNUVRekI0dFdMcGRiRT0SJGRhMjg0MTFhLTcxMTEtNTQxZS05YWM3LWVkZDY5MTFhYWE5MxgAIAAoADDVi7eemzM4lpS3npszQJaUt56bM0ocYVJDV0xnaEY5YjVJbnFLSUR2dUovanZRa0ZjPWUAAAAAwj4CYAASjAEIAhKHAQocWWNTVG9udkVTUHdxQ3M0TDJjclZodjY4TDk4PRIkZGVjOWU0NGEtNmQ1YS01MTFkLWI1ZjEtYTFjYmEzZDhmNGYwGAAgACgAMNaLt56bMziulLeemzNArpS3npszShxvUFZraHdCUmJWNjVLQ1dSMitJT05IV29PdTg9ZQAAAADCPgJgABKMAQgFEocBChx3UkJyWkwrNlBBOWF2S2dqTlA3SlhETGNmdnM9EiQyYjNjZjE2Ny0yZGI3LTU4YWEtYjI5OS0wMDBiZDQyYzhlM2YYACAAKAAw24u3npszONuUt56bM0DblLeemzNKHG5teDY1c1FEdnhJOFRnRWV2K0ErbnR0b1NuND1lAAAAAMI+AmAAMAA4AA==",
+   "version": 1
+}
